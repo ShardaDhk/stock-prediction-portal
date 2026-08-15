@@ -1,3 +1,5 @@
+
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
 
@@ -11,12 +13,38 @@ const axiosInstance = axios.create({
 
 // Request Interceptors
 axiosInstance.interceptors.request.use(
-    function(config) {
+    async function(config) {
         const accessToken = localStorage.getItem('accessToken');
         if(accessToken) {
             config.headers['Authorization'] = `Bearer ${accessToken}`;
         }
         return config;
+
+        // let accessToken = localStorage.getItem("accessToken");
+        // const refreshToken = localStorage.getItem("refreshToken");
+
+        // if (accessToken) {
+        //     const decoded = jwtDecode(accessToken);
+        //     const currentTime = Date.now() / 1000;
+
+        //     // Token expired
+        //     if (decoded.exp < currentTime) {
+        //         try {
+        //             const response = await axiosInstance.post('/token/refresh/', {refresh: refreshToken});
+        //             accessToken = response.data.access;
+        //             localStorage.setItem("accessToken", accessToken);
+
+        //         } catch (error) {
+        //             localStorage.removeItem("accessToken");
+        //             localStorage.removeItem("refreshToken");
+
+        //             return Promise.reject(error);
+        //         }
+        //     }
+        //     config.headers['Authorization'] = `Bearer ${accessToken}`;
+        // }
+        // return config;
+
     }, function(error) {
         return Promise.reject(error);
     }
@@ -36,14 +64,14 @@ axiosInstance.interceptors.response.use(
             try {
                 const response = await axiosInstance.post('/token/refresh/', {refresh: refreshToken})
                 localStorage.setItem('accessToken', response.data.access)
-                originalRequest.headers['Authorizations'] = `Bearer ${response.data.access}`
+                originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`
                 return axiosInstance(originalRequest)
             } catch (error) {
                 localStorage.removeItem('accessToken')
                 localStorage.removeItem('refreshToken')
             }
-            return Promise.reject(error)
         }
+         return Promise.reject(error);
     }
 )
 
